@@ -2,6 +2,16 @@ import re
 import base64
 
 
+def get_sends(service, top=10):
+    sends = (
+        service.users()
+        .messages()
+        .list(userId="me", labelIds=["SENT"], maxResults=top)
+        .execute()
+    )
+    return sends.get("messages")
+
+
 def get_message_data(service, message_id):
     message = get_message(service, message_id)
     previous_messages = get_previous_messages(service, message)
@@ -46,6 +56,9 @@ def parse_message(message):
         data = part.get("body").get("data")
         encoded = bytes(str(data), encoding="utf-8")
         content = base64.urlsafe_b64decode(encoded).decode("utf-8")
+
+    if not content:
+        return None
 
     lines = content.split("\n")
     message = []
